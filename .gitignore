@@ -6,3 +6,8 @@
 
 *.iml
 
+### build file
+
+manga-list/manga-list
+random-money/random-money
+
