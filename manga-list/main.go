@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Manga struct {
@@ -88,6 +89,7 @@ func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitG
 	defer wait.Done()
 	defer close(listResult)
 	for i := start; i <= end; i++ {
+		time.Sleep(time.Second)
 		baseUrl := "https://www.manhuagui.com/list/"
 		var url string
 		if i == 1 {
@@ -98,7 +100,7 @@ func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitG
 
 		mangas, err := manhuaguiListParse(url)
 		if err != nil {
-			fmt.Printf("list err, %s,%+v", url, err)
+			fmt.Printf("list err, %s,%+v\n", url, err)
 			continue
 		}
 		fmt.Printf("list success, %d\n", i)
@@ -107,6 +109,22 @@ func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitG
 		}
 	}
 	fmt.Println("download end")
+}
+
+func manhuaguiDownload(url string) (int, []byte, error) {
+	req := &fasthttp.Request{}
+	req.SetRequestURI(url)
+	req.Header.SetReferer("https://www.manhuagui.com/list/")
+	req.Header.SetUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.100 Safari/537.36")
+	req.Header.SetMethod("GET")
+	resp := &fasthttp.Response{}
+	client := &fasthttp.Client{}
+	if err := client.Do(req, resp); err != nil {
+		return 0, nil, err
+	}
+
+	b := resp.Body()
+	return resp.StatusCode(), b, nil
 }
 
 func parseRange(pr []string, pageRange *string) (int, int, error) {
@@ -129,7 +147,7 @@ func parseRange(pr []string, pageRange *string) (int, int, error) {
 }
 
 func manhuaguiListParse(link string) ([]Manga, error) {
-	statusCode, body, err := fasthttp.Get(nil, link)
+	statusCode, body, err := manhuaguiDownload(link)
 	if err != nil {
 		return nil, err
 	}
