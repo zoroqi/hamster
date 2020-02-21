@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/anaskhan96/soup"
 	"github.com/valyala/fasthttp"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -20,10 +21,12 @@ type Manga struct {
 	Link           string `json:"link"`
 	Type           string `json:"type"`
 	LastUpdateTime string `json:"lastUpdateTime"`
+	Source         string `json:"source"`
 }
 
 func main() {
 
+	rand.Seed(time.Now().UnixNano())
 	f := flag.String("f", "", "output file")
 	pageRange := flag.String("p", "1-5", "page range, \\d-\\d")
 	flag.Parse()
@@ -65,6 +68,7 @@ func main() {
 
 func writeFile(file *os.File, listResult chan Manga, wait *sync.WaitGroup) {
 	defer wait.Done()
+	count := 0
 	for {
 		manga, c := <-listResult
 		if c {
@@ -73,6 +77,7 @@ func writeFile(file *os.File, listResult chan Manga, wait *sync.WaitGroup) {
 				fmt.Printf("marshal err, %+v, %v\n", manga, err)
 				continue
 			}
+			count++
 			_, err = file.WriteString(string(str) + "\n")
 			if err != nil {
 				fmt.Printf("write err, %+v, %v\n", manga, err)
@@ -82,14 +87,16 @@ func writeFile(file *os.File, listResult chan Manga, wait *sync.WaitGroup) {
 			break
 		}
 	}
-	fmt.Println("write end")
+	fmt.Printf("write end, write:%d\n", count)
 }
 
 func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitGroup) {
 	defer wait.Done()
 	defer close(listResult)
+	count := 0
 	for i := start; i <= end; i++ {
-		time.Sleep(time.Second)
+		second := rand.Int63n(20) + 50
+		time.Sleep(time.Second * time.Duration(second))
 		baseUrl := "https://www.manhuagui.com/list/"
 		var url string
 		if i == 1 {
@@ -103,12 +110,13 @@ func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitG
 			fmt.Printf("list err, %s,%+v\n", url, err)
 			continue
 		}
-		fmt.Printf("list success, %d\n", i)
+		fmt.Printf("list success, %d, mangas:%d\n", i, len(mangas))
 		for _, m := range mangas {
 			listResult <- m
+			count++
 		}
 	}
-	fmt.Println("download end")
+	fmt.Printf("download end, download:%d\n", count)
 }
 
 func manhuaguiDownload(url string) (int, []byte, error) {
@@ -177,6 +185,7 @@ func manhuaguiListParse(link string) ([]Manga, error) {
 			Link:           a.Attrs()["href"],
 			Type:           mangaType,
 			LastUpdateTime: span.Text(),
+			Source:         link,
 		})
 	}
 	return manga, nil
