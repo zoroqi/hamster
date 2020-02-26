@@ -97,12 +97,12 @@ func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitG
 	for i := start; i <= end; i++ {
 		second := rand.Int63n(20) + 50
 		time.Sleep(time.Second * time.Duration(second))
-		baseUrl := "https://www.manhuagui.com/list/"
+		baseUrl := "https://www.manhuagui.com/list/update"
 		var url string
 		if i == 1 {
-			url = baseUrl
+			url = baseUrl+".html"
 		} else {
-			url = baseUrl + "index_p" + strconv.Itoa(i) + ".html"
+			url = baseUrl + "_p" + strconv.Itoa(i) + ".html"
 		}
 
 		mangas, err := manhuaguiListParse(url)
