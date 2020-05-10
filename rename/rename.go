@@ -92,8 +92,20 @@ func defaultMapping() map[rune]string {
 
 	mapping['【'] = "-"
 	mapping['】'] = "-"
-
 	mapping['|'] = "-"
+	mapping['！'] = "-"
+	mapping['!'] = "-"
+	mapping['／'] = "-"
+	mapping['〜'] = "-"
+	mapping['~'] = "-"
+	mapping['\''] = "-"
+	mapping['"'] = "-"
+
+	mapping['’'] = "-"
+	mapping['‘'] = "-"
+	mapping['”'] = "-"
+	mapping['“'] = "-"
+	mapping['…'] = "-"
 
 	return mapping
 }
