@@ -1,6 +1,6 @@
 module github.com/zoroqi/rubbish/manga-list
 
-go 1.13
+go 1.15
 
 require (
 	github.com/anaskhan96/soup v1.1.1

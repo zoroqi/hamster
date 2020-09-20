@@ -10,7 +10,6 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 )
@@ -22,22 +21,18 @@ type Manga struct {
 	Type           string `json:"type"`
 	LastUpdateTime string `json:"lastUpdateTime"`
 	Source         string `json:"source"`
+	LastUpdate     string `json:"lastUpdate"`
 }
 
 func main() {
 
 	rand.Seed(time.Now().UnixNano())
 	f := flag.String("f", "", "output file")
-	pageRange := flag.String("p", "1-5", "page range, \\d-\\d")
 	flag.Parse()
 
 	if *f == "" {
 		fmt.Println("f empty")
 		return
-	}
-
-	if *pageRange == "" {
-		*pageRange = "1-5"
 	}
 
 	file, err := os.OpenFile(*f, os.O_CREATE|os.O_RDWR|os.O_APPEND|os.O_SYNC, 0666)
@@ -46,23 +41,11 @@ func main() {
 		return
 	}
 
-	pr := strings.Split(*pageRange, "-")
-	if len(pr) != 2 {
-		fmt.Println("page range err, ", *pageRange)
-		return
-	}
-
-	start, end, err := parseRange(pr, pageRange)
-	if err != nil {
-		fmt.Println("page range err, ", *pageRange)
-	}
-
 	wait := sync.WaitGroup{}
 	wait.Add(2)
 	listResult := make(chan Manga)
-	fmt.Printf("start:%d,end:%d\n", start, end)
 	go writeFile(file, listResult, &wait)
-	go manhuaguiSpider(start, end, listResult, &wait)
+	go manhuaguiSpider(listResult, &wait)
 	wait.Wait()
 }
 
@@ -90,31 +73,24 @@ func writeFile(file *os.File, listResult chan Manga, wait *sync.WaitGroup) {
 	fmt.Printf("write end, write:%d\n", count)
 }
 
-func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitGroup) {
+func manhuaguiSpider(listResult chan Manga, wait *sync.WaitGroup) {
 	defer wait.Done()
 	defer close(listResult)
 	count := 0
-	for i := start; i <= end; i++ {
-		second := rand.Int63n(20) + 50
-		time.Sleep(time.Second * time.Duration(second))
-		baseUrl := "https://www.manhuagui.com/list/update"
-		var url string
-		if i == 1 {
-			url = baseUrl+".html"
-		} else {
-			url = baseUrl + "_p" + strconv.Itoa(i) + ".html"
-		}
+	second := rand.Int63n(20) + 50
+	time.Sleep(time.Second * time.Duration(second))
+	baseUrl := "https://www.manhuagui.com/update/"
 
-		mangas, err := manhuaguiListParse(url)
-		if err != nil {
-			fmt.Printf("list err, %s,%+v\n", url, err)
-			continue
-		}
-		fmt.Printf("list success, %d, mangas:%d\n", i, len(mangas))
-		for _, m := range mangas {
-			listResult <- m
-			count++
-		}
+	url := baseUrl
+	mangas, err := manhuaguiListParse(url)
+	if err != nil {
+		fmt.Printf("list err, %s,%+v\n", url, err)
+		return
+	}
+	fmt.Printf("list success,  mangas:%d\n", len(mangas))
+	for _, m := range mangas {
+		listResult <- m
+		count++
 	}
 	fmt.Printf("download end, download:%d\n", count)
 }
@@ -122,7 +98,7 @@ func manhuaguiSpider(start int, end int, listResult chan Manga, wait *sync.WaitG
 func manhuaguiDownload(url string) (int, []byte, error) {
 	req := &fasthttp.Request{}
 	req.SetRequestURI(url)
-	req.Header.SetReferer("https://www.manhuagui.com/list/")
+	req.Header.SetReferer("https://www.manhuagui.com/")
 	req.Header.SetUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.100 Safari/537.36")
 	req.Header.SetMethod("GET")
 	resp := &fasthttp.Response{}
@@ -164,12 +140,13 @@ func manhuaguiListParse(link string) ([]Manga, error) {
 	}
 
 	doc := soup.HTMLParse(string(body))
-	mangalist := doc.Find("ul", "id", "contList").FindAll("li")
+	mangalist := doc.Find("div", "class", "latest-list").FindAll("li")
 	var manga []Manga
 	for _, m := range mangalist {
 		a := m.Find("p").Find("a")
-		span := m.Find("span", "class", "updateon")
+		span := m.Find("span", "class", "dt")
 		fd := m.Find("span", "class", "fd")
+		tt := m.Find("span", "class", "tt")
 		sl := m.Find("span", "class", "sl")
 		mangaType := ""
 		if fd.Error != nil {
@@ -177,6 +154,10 @@ func manhuaguiListParse(link string) ([]Manga, error) {
 		}
 		if sl.Error != nil {
 			mangaType += "连载"
+		}
+		lastTT := ""
+		if tt.Error == nil {
+			lastTT = tt.Text()
 		}
 
 		manga = append(manga, Manga{
@@ -186,6 +167,7 @@ func manhuaguiListParse(link string) ([]Manga, error) {
 			Type:           mangaType,
 			LastUpdateTime: span.Text(),
 			Source:         link,
+			LastUpdate:     lastTT,
 		})
 	}
 	return manga, nil
