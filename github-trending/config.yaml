@@ -1,0 +1,4 @@
+- name: go
+  param: go?since=daily
+- name: java
+  param: java?since=daily

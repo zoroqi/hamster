@@ -13,3 +13,6 @@ manga-list/manga-list
 random-money/random-money
 
 .data
+
+go.sum
+github-trending
