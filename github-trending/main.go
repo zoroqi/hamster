@@ -112,12 +112,13 @@ func main() {
 
 	contents := `# ` + t.Format("2006-01-02") + "\n"
 	text := ""
-	for _, c := range configs {
+	for i, c := range configs {
 		f, err := executeTrending(c)
 		if err != nil {
 			continue
 		}
-		contents += fmt.Sprintf("* [%s](%s)\n", c.Name, c.Name)
+		fmt.Println(i, c.Name)
+		contents += fmt.Sprintf("* [%s](#%s)\n", c.Name, c.Name)
 		text += fmt.Sprintf("# %s\n\n%s\n\n", c.Name, f)
 
 	}
