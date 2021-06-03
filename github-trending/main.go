@@ -115,6 +115,7 @@ func main() {
 	for i, c := range configs {
 		f, err := executeTrending(c)
 		if err != nil {
+			fmt.Println(i,c.Name,err)
 			continue
 		}
 		fmt.Println(i, c.Name)
