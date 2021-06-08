@@ -13,8 +13,8 @@ import (
 
 func ZettelIndex() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "index",
-		Long: "build zettel index [给每条笔记分配一个固定地址](https://zettelkasten.de/introduction/zh/#%E7%BB%99%E6%AF%8F%E6%9D%A1%E7%AC%94%E8%AE%B0%E5%88%86%E9%85%8D%E4%B8%80%E4%B8%AA%E5%9B%BA%E5%AE%9A%E5%9C%B0%E5%9D%80)",
+		Use:   "index",
+		Long:  "build zettel index [给每条笔记分配一个固定地址](https://zettelkasten.de/introduction/zh/#%E7%BB%99%E6%AF%8F%E6%9D%A1%E7%AC%94%E8%AE%B0%E5%88%86%E9%85%8D%E4%B8%80%E4%B8%AA%E5%9B%BA%E5%AE%9A%E5%9C%B0%E5%9D%80)",
 		Short: "build zettel index",
 
 		Run: func(cmd *cobra.Command, args []string) {
@@ -83,12 +83,39 @@ func toString(z zettelIndex, root string) string {
 			p = fmt.Sprintf("%s%s", root, z.path)
 		}
 		sb.WriteString(fmt.Sprintf("%s* [%s](%s)\n", space, z.Name(), p))
+		arr := make([]zettelIndex, len(z.child))
+		i := 0
 		for _, c := range z.child {
+			arr[i] = c
+			i++
+		}
+		sortZettel(arr)
+		for _, c := range arr {
 			dfs(c, root, space+"    ")
 		}
 	}
 	dfs(z, root, "")
 	return sb.String()
+}
+
+// 1 < 2, 1a < 1b, 越短越大
+func sortZettel(arr []zettelIndex) {
+	sort.Slice(arr, func(i, j int) bool {
+		in := arr[i].name
+		jn := arr[j].name
+
+		l := len(in)
+		if l > len(jn) {
+			l = len(jn)
+		}
+
+		for i := 0; i < l; i++ {
+			if in[i] != jn[i] {
+				return in[i] < jn[i]
+			}
+		}
+		return len(in) < len(jn)
+	})
 }
 
 func buildIndex(dir, output, pre string) {
@@ -114,24 +141,7 @@ func buildIndex(dir, output, pre string) {
 		fmt.Errorf("walk err %s", err)
 		return
 	}
-	// 1 < 2, 1a < 1b, 越短越大
-	sort.Slice(files, func(i, j int) bool {
-		in := files[i].name
-		jn := files[j].name
-
-		l := len(in)
-		if l > len(jn) {
-			l = len(jn)
-		}
-
-		for i := 0; i < l; i++ {
-			if in[i] != jn[i] {
-				return in[i] < jn[i]
-			}
-		}
-
-		return len(in) < len(jn)
-	})
+	sortZettel(files)
 	files = merge(files)
 	for _, f := range files {
 		ioutil.WriteFile(
