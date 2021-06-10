@@ -32,6 +32,7 @@ func ZettelIndex() *cobra.Command {
 
 type zettelIndex struct {
 	name  []string
+	title string
 	path  string
 	child map[string]zettelIndex
 }
@@ -62,6 +63,16 @@ func buildZI(name string, pre string, path string) zettelIndex {
 			z.name = append(z.name, letters[i])
 		}
 	}
+
+	txt, err := ioutil.ReadFile(path)
+	if err == nil {
+		p := regexp.MustCompile("^#\\s+(.*?)\n")
+		title := p.FindAllSubmatch(txt, -1)
+		if len(title) > 0 {
+			z.title = string(title[0][1])
+		}
+	}
+
 	return z
 }
 
@@ -82,7 +93,7 @@ func toString(z zettelIndex, root string) string {
 		} else {
 			p = fmt.Sprintf("%s%s", root, z.path)
 		}
-		sb.WriteString(fmt.Sprintf("%s* [%s](%s)\n", space, z.Name(), p))
+		sb.WriteString(fmt.Sprintf("%s* [%s|%s](%s)\n", space, z.Name(), z.title, p))
 		arr := make([]zettelIndex, len(z.child))
 		i := 0
 		for _, c := range z.child {
