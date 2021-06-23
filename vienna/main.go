@@ -116,10 +116,10 @@ func loadMarked(db *sql.DB, rssFolderMapping map[int64]rss) (map[string][]clipbo
 		m := clipboard.Mark{
 			Text:    title,
 			Link:    strings.TrimSpace(link),
-			LinkStr: fmt.Sprintf("[%s][%s]", strings.TrimSpace(title), strings.TrimSpace(link)),
+			LinkStr: fmt.Sprintf("[%s](%s)", strings.TrimSpace(title), strings.TrimSpace(link)),
 		}
 		if rs, exist := rssFolderMapping[folderId]; exist {
-			m.Source = fmt.Sprintf("[%s][%s]", rs.title, rs.link)
+			m.Source = fmt.Sprintf("[%s](%s)", rs.title, rs.link)
 		}
 		if uri, err := url.Parse(link); err == nil {
 			r := regexp.MustCompile("([^.]*?)\\.([^.]*?)$")
