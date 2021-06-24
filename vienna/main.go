@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	db     = flag.String("db", "", "vienna db path")
-	output = flag.String("output", "", "output file path")
+	db        = flag.String("db", "", "vienna db path")
+	output    = flag.String("output", "", "output file path")
+	outputPre = flag.String("pre", "", "output file pre")
 )
 
 func main() {
@@ -49,7 +50,7 @@ func main() {
 		return
 	}
 	for k, v := range marks {
-		path := fmt.Sprintf("%s/%s.md", *output, k)
+		path := fmt.Sprintf("%s/%s%s.md", *output, *outputPre, k)
 		f, err := os.Open(path)
 		var old []clipboard.Mark
 		if err == nil {
@@ -97,7 +98,7 @@ func loadRss(db *sql.DB) (map[int64]rss, error) {
 }
 
 func loadMarked(db *sql.DB, rssFolderMapping map[int64]rss) (map[string][]clipboard.Mark, error) {
-	rows, err := db.Query("select folder_id,title,link,date from messages where marked_flag=1 order by createddate desc")
+	rows, err := db.Query("select folder_id,title,link,date,text from messages where marked_flag=1 order by createddate desc")
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +108,8 @@ func loadMarked(db *sql.DB, rssFolderMapping map[int64]rss) (map[string][]clipbo
 		var link string
 		var date float64
 		var folderId int64
-		err = rows.Scan(&folderId, &title, &link, &date)
+		var text string
+		err = rows.Scan(&folderId, &title, &link, &date, &text)
 		if err != nil {
 			fmt.Println(err)
 			continue
@@ -128,7 +130,14 @@ func loadMarked(db *sql.DB, rssFolderMapping map[int64]rss) (map[string][]clipbo
 				m.Tags = []string{ss[0][1]}
 			}
 		}
+
+		txt := regexp.MustCompile("<[^>]*?>").ReplaceAllString(text, "")
+		// 处理转义符号, 基本可用
+		txt = regexp.MustCompile("&[a-zA-Z]{1,10};").ReplaceAllString(txt, "")
+		txt = strings.ReplaceAll(txt, "\r", "")
+
 		m.Id = clipboard.NewId(m.Link)
+		m.Text = title + "\n" + txt
 		result[createDate.Format("200601")] = append(result[createDate.Format("200601")], m)
 	}
 
