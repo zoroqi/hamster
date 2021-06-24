@@ -118,16 +118,19 @@ func ParseStoreFile(in io.Reader) ([]Mark, string) {
 				continue
 			}
 		}
-		if strings.HasPrefix(line, "---") {
+
+		if !textflag && strings.HasPrefix(line, "---") {
 			clean()
 			r = append(r, ss)
 			ss = Mark{}
 			changeFlag(false, false)
 			continue
 		}
+
 		if line == "" && !textflag && !opinionflag {
 			continue
 		}
+
 		switch prefix(line) {
 		case "id":
 			s := line[3:]
@@ -162,9 +165,16 @@ func ParseStoreFile(in io.Reader) ([]Mark, string) {
 			}
 		}
 	}
-	if ss.idString() != r[len(r)-1].idString() && ss.Text != "" {
-		clean()
-		r = append(r, ss)
+
+	// 对最后一个分组进行处理
+	if strings.TrimSpace(ss.Text) != "" {
+		if len(r) > 1 && ss.idString() != r[len(r)-1].idString() {
+			clean()
+			r = append(r, ss)
+		}
+	}
+	if len(r) == 0 {
+		return nil, fileTitle
 	}
 
 	return r[1:], fileTitle
