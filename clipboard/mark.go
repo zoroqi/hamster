@@ -111,7 +111,9 @@ func ParseStoreFile(in io.Reader) ([]Mark, string) {
 		if eof == io.EOF || eof != nil {
 			break
 		}
-		line = strings.TrimSpace(line)
+		if textflag || opinionflag {
+			line = strings.TrimSpace(line)
+		}
 		if len(fileTitle) == 0 {
 			if strings.HasPrefix(line, "# ") {
 				fileTitle = line[2:]
