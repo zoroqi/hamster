@@ -7,10 +7,10 @@ type ChanStream[T any] struct {
 func NewChanStreamByArray[T any](a []T) *ChanStream[T] {
 	out := make(chan T)
 	go func() {
+		defer close(out)
 		for _, v := range a {
 			out <- v
 		}
-		close(out)
 	}()
 	return &ChanStream[T]{
 		out: out,
@@ -20,10 +20,10 @@ func NewChanStreamByArray[T any](a []T) *ChanStream[T] {
 func NewChanStreamByChan[T any](a chan T) *ChanStream[T] {
 	out := make(chan T)
 	go func() {
+		defer close(out)
 		for v := range a {
 			out <- v
 		}
-		close(out)
 	}()
 	return &ChanStream[T]{
 		out: out,
@@ -38,10 +38,10 @@ type Iterator[T any] interface {
 func NewChanStreamByIterator[T any](a Iterator[T]) *ChanStream[T] {
 	out := make(chan T)
 	go func() {
+		defer close(out)
 		for a.HasNext() {
 			out <- a.Next()
 		}
-		close(out)
 	}()
 	return &ChanStream[T]{
 		out: out,
@@ -51,12 +51,12 @@ func NewChanStreamByIterator[T any](a Iterator[T]) *ChanStream[T] {
 func Filter[T any](f func(T) bool, stream *ChanStream[T]) *ChanStream[T] {
 	out := make(chan T)
 	go func() {
+		defer close(out)
 		for v := range stream.out {
 			if f(v) {
 				out <- v
 			}
 		}
-		close(out)
 	}()
 	return &ChanStream[T]{
 		out: out,
@@ -66,10 +66,10 @@ func Filter[T any](f func(T) bool, stream *ChanStream[T]) *ChanStream[T] {
 func Map[T any, R any](m func(T) R, stream *ChanStream[T]) *ChanStream[R] {
 	out := make(chan R)
 	go func() {
+		defer close(out)
 		for v := range stream.out {
 			out <- m(v)
 		}
-		close(out)
 	}()
 	return &ChanStream[R]{
 		out: out,
