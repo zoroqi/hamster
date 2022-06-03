@@ -1,3 +1,3 @@
-module github.com/zoroqi/rubbish/go-stream
+module github.com/zoroqi/gostream
 
 go 1.18
