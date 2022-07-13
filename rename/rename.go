@@ -21,18 +21,26 @@ func main() {
 	} else {
 		root = args[1]
 	}
+	renameDir(root)
+	renameFile(root)
+}
+
+func renameDir(root string) {
 	var infos []info
-	filepath.Walk(root, func(path string, fileInfo os.FileInfo, err error) error {
-		if err == nil && !fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
+	err := filepath.Walk(root, func(path string, fileInfo os.FileInfo, err error) error {
+		if err == nil && fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
 			infos = append(infos, info{path: path, fileInfo: fileInfo})
 		}
 		return err
 	})
-
-	if len(infos) == 0 {
+	if err != nil {
+		fmt.Println("err:", err)
 		return
 	}
+	replaceName(infos)
+}
 
+func replaceName(infos []info) {
 	mapping := loadMapping("")
 	if mapping == nil {
 		return
@@ -56,6 +64,21 @@ func main() {
 			}
 		}
 	}
+}
+
+func renameFile(root string) {
+	var infos []info
+	err := filepath.Walk(root, func(path string, fileInfo os.FileInfo, err error) error {
+		if err == nil && !fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
+			infos = append(infos, info{path: path, fileInfo: fileInfo})
+		}
+		return err
+	})
+	if err != nil {
+		fmt.Println("err:", err)
+		return
+	}
+	replaceName(infos)
 }
 
 func loadMapping(path string) map[rune]string {
