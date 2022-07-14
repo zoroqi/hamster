@@ -31,6 +31,9 @@ func renameDir(root string) {
 		if err == nil && fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
 			infos = append(infos, info{path: path, fileInfo: fileInfo})
 		}
+		if root != path && fileInfo.IsDir() && strings.HasPrefix(fileInfo.Name(), ".") {
+			return filepath.SkipDir
+		}
 		return err
 	})
 	if err != nil {
@@ -41,7 +44,7 @@ func renameDir(root string) {
 }
 
 func replaceName(infos []info) {
-	mapping := loadMapping("")
+	mapping := loadMapping()
 	if mapping == nil {
 		return
 	}
@@ -72,6 +75,9 @@ func renameFile(root string) {
 		if err == nil && !fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
 			infos = append(infos, info{path: path, fileInfo: fileInfo})
 		}
+		if root != path && fileInfo.IsDir() && strings.HasPrefix(fileInfo.Name(), ".") {
+			return filepath.SkipDir
+		}
 		return err
 	})
 	if err != nil {
@@ -81,109 +87,111 @@ func renameFile(root string) {
 	replaceName(infos)
 }
 
-func loadMapping(path string) map[rune]string {
-	if path == "" {
-		return defaultMapping()
-	}
-	return nil
+func loadMapping() map[rune]bool {
+	return defaultMapping()
 }
 
-func defaultMapping() map[rune]string {
-	mapping := make(map[rune]string)
-	mapping[' '] = "-"
-	mapping['　'] = "-"
+func defaultMapping() map[rune]bool {
+	mapping := make(map[rune]bool)
+	mapping[' '] = true
+	mapping['　'] = true
 
-	mapping['：'] = "-"
-	mapping[':'] = "-"
+	mapping['：'] = true
+	mapping[':'] = true
 
-	mapping['；'] = "-"
-	mapping[';'] = "-"
+	mapping['；'] = true
+	mapping[';'] = true
 
-	mapping['，'] = "-"
-	mapping['。'] = "-"
-	mapping['、'] = "-"
+	mapping['，'] = true
+	mapping['。'] = true
+	mapping['、'] = true
 
-	mapping['《'] = "-"
-	mapping['》'] = "-"
+	mapping['《'] = true
+	mapping['》'] = true
 
-	mapping['—'] = "-"
+	mapping['—'] = true
 
-	mapping['（'] = "-"
-	mapping['）'] = "-"
+	mapping['（'] = true
+	mapping['）'] = true
 
-	mapping['+'] = "-"
+	mapping['+'] = true
 
-	mapping['【'] = "-"
-	mapping['】'] = "-"
-	mapping['|'] = "-"
-	mapping['！'] = "-"
-	mapping['!'] = "-"
-	mapping['／'] = "-"
-	mapping['\\'] = "-"
-	mapping['〜'] = "-"
-	mapping['~'] = "-"
-	mapping['\''] = "-"
-	mapping['"'] = "-"
+	mapping['【'] = true
+	mapping['】'] = true
+	mapping['|'] = true
+	mapping['！'] = true
+	mapping['!'] = true
+	mapping['／'] = true
+	mapping['\\'] = true
+	mapping['〜'] = true
+	mapping['~'] = true
+	mapping['\''] = true
+	mapping['"'] = true
 
-	mapping['’'] = "-"
-	mapping['‘'] = "-"
-	mapping['”'] = "-"
-	mapping['“'] = "-"
-	mapping['…'] = "-"
-	mapping['*'] = "-"
-	mapping[','] = "-"
-	mapping[')'] = "-"
-	mapping['('] = "-"
-	mapping['['] = "-"
-	mapping[']'] = "-"
-	mapping['&'] = "-"
-	mapping['#'] = "-"
-	mapping['^'] = "-"
-	mapping['`'] = "-"
-	mapping['@'] = "-"
-	mapping['・'] = "-"
-	mapping['{'] = "-"
-	mapping['}'] = "-"
-	mapping['「'] = "-"
-	mapping['」'] = "-"
+	mapping['’'] = true
+	mapping['‘'] = true
+	mapping['”'] = true
+	mapping['“'] = true
+	mapping['…'] = true
+	mapping['*'] = true
+	mapping[','] = true
+	mapping[')'] = true
+	mapping['('] = true
+	mapping['['] = true
+	mapping[']'] = true
+	mapping['&'] = true
+	mapping['#'] = true
+	mapping['^'] = true
+	mapping['`'] = true
+	mapping['@'] = true
+	mapping['・'] = true
+	mapping['{'] = true
+	mapping['}'] = true
+	mapping['「'] = true
+	mapping['」'] = true
 
 	return mapping
 }
 
-func rename(name string, mapping map[rune]string) string {
+func rename(name string, mapping map[rune]bool) string {
+	const midlineS = "-"
+	const midlineR = '-'
 	oldName := strings.TrimSpace(name)
 	newNameSb := strings.Builder{}
 	runes := []rune(oldName)
 	dot := lastIndex(runes, '.')
-	noExt := dot < 0
-	if noExt {
-		dot = len(runes)
+	nameIndex := dot
+	if dot < 0 {
+		nameIndex = len(runes)
 	}
-	for i := 0; i < dot; i++ {
-		if m, exist := mapping[runes[i]]; exist {
-			newNameSb.WriteString(m)
+	for i := 0; i < nameIndex; i++ {
+		if mapping[runes[i]] {
+			newNameSb.WriteString(midlineS)
 		} else {
 			newNameSb.WriteRune(runes[i])
 		}
 	}
-	if !noExt {
+	if dot >= 0 {
 		for i := dot; i < len(runes); i++ {
 			newNameSb.WriteRune(runes[i])
 		}
 	}
 
 	r, _ := regexp.Compile("\\-+")
-	newName := r.ReplaceAllString(newNameSb.String(), "-")
-
+	newName := r.ReplaceAllString(newNameSb.String(), midlineS)
 	newNameRunes := []rune(newName)
-	if newNameRunes[0] == '-' {
+	if newNameRunes[0] == midlineR {
 		newNameRunes = newNameRunes[1:]
 	}
 	newDotIndex := lastIndex(newNameRunes, '.')
 	if newDotIndex <= 0 {
-		return string(newNameRunes)
+		if newNameRunes[len(newNameRunes)-1] == midlineR {
+			return string(newNameRunes[0 : len(newNameRunes)-1])
+		} else {
+			return string(newNameRunes)
+		}
 	} else {
-		if newNameRunes[newDotIndex-1] == '-' {
+		if newNameRunes[newDotIndex-1] == midlineR {
 			return string(newNameRunes[0:newDotIndex-1]) + string(newNameRunes[newDotIndex:])
 		} else {
 			return string(newNameRunes)
