@@ -5,7 +5,7 @@ import (
 )
 
 func TestRename(t *testing.T) {
-	mapping := defaultMapping()
+	mapping := loadMapping()
 	testcase := map[string]string{
 		"ab":         "ab",
 		"a b":        "a-b",
