@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestRename(t *testing.T) {
 	mapping := defaultMapping()

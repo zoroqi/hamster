@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -26,47 +27,97 @@ func main() {
 }
 
 func renameDir(root string) {
-	var infos []info
-	err := filepath.Walk(root, func(path string, fileInfo os.FileInfo, err error) error {
-		if err == nil && fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
-			infos = append(infos, info{path: path, fileInfo: fileInfo})
+	queue := make([]struct {
+		p string
+	}, 0)
+	queue = append(queue, struct{ p string }{p: root})
+	bfs := func(path string) error {
+		fileInfo, err := os.Lstat(path)
+		if err != nil {
+			return err
 		}
-		if root != path && fileInfo.IsDir() && strings.HasPrefix(fileInfo.Name(), ".") {
-			return filepath.SkipDir
+		newpath := path
+		if fileInfo.IsDir() && !strings.HasPrefix(fileInfo.Name(), ".") {
+			i := info{path: path, fileInfo: fileInfo}
+			newpath, err = replaceName(i)
+			if err != nil {
+				return err
+			}
+
 		}
-		return err
-	})
-	if err != nil {
-		fmt.Println("err:", err)
-		return
+		fileInfo, err = os.Lstat(newpath)
+		if err != nil {
+			return err
+		}
+		if fileInfo.IsDir() {
+			files, err := readDirNames(newpath)
+			if err != nil {
+				return err
+			}
+			for _, f := range files {
+				nfp := filepath.Join(newpath, f)
+				fi, err := os.Lstat(nfp)
+				if err != nil {
+					return err
+				}
+				if fi.IsDir() && !strings.HasPrefix(fi.Name(), ".") {
+					queue = append(queue, struct {
+						p string
+					}{p: nfp})
+				}
+			}
+		}
+		return nil
 	}
-	replaceName(infos)
+
+	for len(queue) != 0 {
+		if err := bfs(queue[0].p); err != nil {
+			fmt.Println(err)
+			return
+		}
+		queue = queue[1:]
+	}
 }
 
-func replaceName(infos []info) {
-	mapping := loadMapping()
-	if mapping == nil {
-		return
+func readDirNames(dirname string) ([]string, error) {
+	f, err := os.Open(dirname)
+	if err != nil {
+		return nil, err
 	}
+	names, err := f.Readdirnames(-1)
+	f.Close()
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(names)
+	return names, nil
+}
+
+func replaceNames(infos []info) error {
 	for _, info := range infos {
-		newName := rename(info.fileInfo.Name(), mapping)
-		if newName != info.fileInfo.Name() {
-			fmt.Println(info.fileInfo.Name() + " -> " + newName)
-			path := info.path
-			index := strings.LastIndex(path, "/")
-			var err error
-			if index < 0 {
-				err = os.Rename(info.path, newName)
-			} else {
-				newPath := path[0:index] + "/" + newName
-				err = os.Rename(info.path, newPath)
-			}
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
+		_, err := replaceName(info)
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+func replaceName(i info) (newPath string, err error) {
+	mapping := loadMapping()
+	if mapping == nil {
+		return i.path, nil
+	}
+	newName := rename(i.fileInfo.Name(), mapping)
+	if newName != i.fileInfo.Name() {
+		fmt.Println(i.fileInfo.Name() + " -> " + newName)
+		path := i.path
+		dir, _ := filepath.Split(path)
+		newPath := filepath.Join(dir, newName)
+		err := os.Rename(i.path, newPath)
+		return newPath, err
+	}
+	return i.path, err
 }
 
 func renameFile(root string) {
@@ -84,73 +135,72 @@ func renameFile(root string) {
 		fmt.Println("err:", err)
 		return
 	}
-	replaceName(infos)
+	replaceNames(infos)
 }
 
 func loadMapping() map[rune]bool {
-	return defaultMapping()
+	return defaultMapping
 }
 
-func defaultMapping() map[rune]bool {
-	mapping := make(map[rune]bool)
-	mapping[' '] = true
-	mapping['　'] = true
+var defaultMapping = make(map[rune]bool)
 
-	mapping['：'] = true
-	mapping[':'] = true
+func init() {
+	defaultMapping[' '] = true
+	defaultMapping['　'] = true
 
-	mapping['；'] = true
-	mapping[';'] = true
+	defaultMapping['：'] = true
+	defaultMapping[':'] = true
 
-	mapping['，'] = true
-	mapping['。'] = true
-	mapping['、'] = true
+	defaultMapping['；'] = true
+	defaultMapping[';'] = true
 
-	mapping['《'] = true
-	mapping['》'] = true
+	defaultMapping['，'] = true
+	defaultMapping['。'] = true
+	defaultMapping['、'] = true
 
-	mapping['—'] = true
+	defaultMapping['《'] = true
+	defaultMapping['》'] = true
 
-	mapping['（'] = true
-	mapping['）'] = true
+	defaultMapping['—'] = true
 
-	mapping['+'] = true
+	defaultMapping['（'] = true
+	defaultMapping['）'] = true
 
-	mapping['【'] = true
-	mapping['】'] = true
-	mapping['|'] = true
-	mapping['！'] = true
-	mapping['!'] = true
-	mapping['／'] = true
-	mapping['\\'] = true
-	mapping['〜'] = true
-	mapping['~'] = true
-	mapping['\''] = true
-	mapping['"'] = true
+	defaultMapping['+'] = true
 
-	mapping['’'] = true
-	mapping['‘'] = true
-	mapping['”'] = true
-	mapping['“'] = true
-	mapping['…'] = true
-	mapping['*'] = true
-	mapping[','] = true
-	mapping[')'] = true
-	mapping['('] = true
-	mapping['['] = true
-	mapping[']'] = true
-	mapping['&'] = true
-	mapping['#'] = true
-	mapping['^'] = true
-	mapping['`'] = true
-	mapping['@'] = true
-	mapping['・'] = true
-	mapping['{'] = true
-	mapping['}'] = true
-	mapping['「'] = true
-	mapping['」'] = true
+	defaultMapping['【'] = true
+	defaultMapping['】'] = true
+	defaultMapping['|'] = true
+	defaultMapping['！'] = true
+	defaultMapping['!'] = true
+	defaultMapping['／'] = true
+	defaultMapping['\\'] = true
+	defaultMapping['〜'] = true
+	defaultMapping['~'] = true
+	defaultMapping['\''] = true
+	defaultMapping['"'] = true
 
-	return mapping
+	defaultMapping['’'] = true
+	defaultMapping['‘'] = true
+	defaultMapping['”'] = true
+	defaultMapping['“'] = true
+	defaultMapping['…'] = true
+	defaultMapping['*'] = true
+	defaultMapping[','] = true
+	defaultMapping[')'] = true
+	defaultMapping['('] = true
+	defaultMapping['['] = true
+	defaultMapping[']'] = true
+	defaultMapping['&'] = true
+	defaultMapping['#'] = true
+	defaultMapping['^'] = true
+	defaultMapping['`'] = true
+	defaultMapping['@'] = true
+	defaultMapping['・'] = true
+	defaultMapping['{'] = true
+	defaultMapping['}'] = true
+	defaultMapping['「'] = true
+	defaultMapping['」'] = true
 }
 
 func rename(name string, mapping map[rune]bool) string {
