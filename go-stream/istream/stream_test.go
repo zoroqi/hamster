@@ -18,14 +18,14 @@ func TestAlloc(t *testing.T) {
 	t.Log(f)
 }
 
-func TMulti() {
+func TMulti() int64 {
 	length := 10000
 	nums := make([]int, 0, length)
 	for i := 0; i < length; i++ {
 		nums = append(nums, i+1)
 	}
 	stream := NewIteratorStreamBySlice(nums)
-	Reduce(
+	return Reduce(
 		func(n int, r int64) int64 {
 			return int64(n) + r
 		}, 0,
