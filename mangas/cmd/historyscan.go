@@ -20,15 +20,13 @@ var historyScanCmd = &cobra.Command{
 	RunE:  historyScan,
 }
 var (
-	crawlInterval int64
-	of            string
-	starPage      int
-	endPage       int
+	of       string
+	starPage int
+	endPage  int
 )
 
 func init() {
 	RootCmd.AddCommand(historyScanCmd)
-	historyScanCmd.Flags().Int64Var(&crawlInterval, "crawl", 0, "crawlInterval")
 	historyScanCmd.Flags().StringVarP(&outfile, "outfile", "f", "", "outfile")
 	historyScanCmd.Flags().IntVarP(&starPage, "starPage", "s", 0, "starPage")
 	historyScanCmd.Flags().IntVarP(&endPage, "endPage", "e", 0, "endPage")
@@ -66,14 +64,7 @@ func historyScan(cmd *cobra.Command, args []string) error {
 func writeCsv(mgs []data.Manga, f io.Writer) error {
 	writer := csv.NewWriter(f)
 	for _, manga := range mgs {
-		err := writer.Write([]string{manga.Source,
-			manga.Title,
-			manga.Link,
-			manga.Cover,
-			manga.Type,
-			manga.Last,
-			manga.LastUpdate.Format(time.DateOnly),
-		})
+		err := writer.Write(manga.ToSlice())
 		if err != nil {
 			fmt.Printf("marshal err, %+v, %v\n", manga, err)
 			continue

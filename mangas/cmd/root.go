@@ -14,7 +14,13 @@ var RootCmd = &cobra.Command{
 	SilenceUsage:  true,
 }
 
+var (
+	crawlInterval int64
+)
+
 func Execute() {
+	RootCmd.PersistentFlags().Int64Var(&crawlInterval, "crawl", 60, "crawlInterval")
+
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
