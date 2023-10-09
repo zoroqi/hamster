@@ -55,6 +55,7 @@ func (m Manga) ToSlice() []string {
 type MangaExtra struct {
 	Manga
 	Country     string    `json:"country"`
+	Authors     []string  `json:"authors"`
 	Aliases     []string  `json:"aliases"`
 	Type        []string  `json:"type"`
 	Create      time.Time `json:"create"`
@@ -64,6 +65,7 @@ type MangaExtra struct {
 func (m MangaExtra) ToSlice() []string {
 	r := m.Manga.ToSlice()
 	r = append(r, m.Country)
+	r = append(r, strings.Join(m.Authors, ","))
 	r = append(r, strings.Join(m.Aliases, ","))
 	r = append(r, strings.Join(m.Type, ","))
 	r = append(r, m.Create.Format(time.DateOnly))

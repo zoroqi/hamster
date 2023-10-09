@@ -79,6 +79,7 @@ func mangaExtra(cmd *cobra.Command, args []string) error {
 		}
 		mhg := website.Mhg{}
 		bs, err := mhg.Manga(fmt.Sprintf("https://www.manhuagui.com/comic/%s/", mg.Mid))
+		fmt.Printf("%d %s", i, mg.Title)
 		if err != nil {
 			return err
 		}
@@ -86,6 +87,7 @@ func mangaExtra(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+		fmt.Printf(", chapter size:%d\n", len(mge.ChapterList))
 		mge.Manga = mg
 		err = csvw.Write(mge.ToSlice())
 		if err != nil {

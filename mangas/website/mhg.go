@@ -197,6 +197,12 @@ func (mhg *Mhg) ParseManga(bs []byte) (data.MangaExtra, error) {
 				extra.Type = append(extra.Type, strings.TrimSpace(cc.Text()))
 			}
 		}
+		if len(row2) >= 2 {
+			c := row2[1].FindAll("a")
+			for _, cc := range c {
+				extra.Authors = append(extra.Authors, strings.TrimSpace(cc.Text()))
+			}
+		}
 	}
 	if len(detailList) >= 3 {
 		row3 := detailList[2].Find("span").FindAll("a")
