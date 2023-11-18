@@ -182,7 +182,11 @@ func (mhg *Mhg) ParseManga(bs []byte) (data.MangaExtra, error) {
 		row1 := detailList[0].FindAll("span")
 		if len(row1) >= 1 {
 			c := row1[0].Find("a")
-			extra.Create, _ = time.Parse("2006年", strings.TrimSpace(c.Text()))
+			if c.Error == nil {
+				extra.Create, _ = time.Parse("2006年", strings.TrimSpace(c.Text()))
+			} else {
+				extra.Create = time.Now()
+			}
 		}
 		if len(row1) >= 2 {
 			c := row1[1].Find("a")
