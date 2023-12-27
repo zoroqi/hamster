@@ -144,7 +144,7 @@ func ListUpdate(mhg *website.Mhg, url string) ([]data.Manga, error) {
 func writeFile(file io.Writer, listResult []data.Manga) {
 	writer := csv.NewWriter(file)
 	count := 0
-	writer.Write([]string{"source", "title", "link", "cover", "type", "last", "mid"})
+	writer.Write([]string{"source", "title", "link", "cover", "type", "last", "lastDate", "mid"})
 	for _, manga := range listResult {
 		err := writer.Write(manga.ToSlice())
 		if err != nil {
