@@ -21,3 +21,11 @@ mangas/mangas
 go.sum
 github-trending
 excel
+_*
+
+## notes-analysis
+notes-analysis/dgraph
+notes-analysis/cmd/cmd
+
+## gokey
+gokey/gokey
