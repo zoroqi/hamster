@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/zoroqi/rubbish/zettel/index"
+	"github.com/zoroqi/hamster/zettel/index"
 )
 
 var rootCmd = &cobra.Command{

@@ -1,4 +1,4 @@
-module github.com/zoroqi/rubbish/zettel
+module github.com/zoroqi/hamster/zettel
 
 go 1.16
 

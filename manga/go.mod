@@ -1,3 +1,3 @@
-module github.com/zoroqi/rubbish/manga
+module github.com/zoroqi/hamster/manga
 
 go 1.13

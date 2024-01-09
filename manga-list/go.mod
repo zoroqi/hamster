@@ -1,4 +1,4 @@
-module github.com/zoroqi/rubbish/manga-list
+module github.com/zoroqi/hamster/manga-list
 
 go 1.15
 

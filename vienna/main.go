@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/mattn/go-sqlite3"
-	"github.com/zoroqi/rubbish/clipboard"
+	"github.com/zoroqi/hamster/clipboard"
 	"io/ioutil"
 	"net/url"
 	"os"

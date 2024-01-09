@@ -1,4 +1,4 @@
-module github.com/zoroqi/rubbish/mangas
+module github.com/zoroqi/hamster/mangas
 
 go 1.21.0
 

@@ -1,3 +1,3 @@
-module github.com/zoroqi/rubbish/disc
+module github.com/zoroqi/hamster/disc
 
 go 1.16

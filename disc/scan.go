@@ -1,7 +1,7 @@
 package disc
 
 import (
-	"github.com/zoroqi/rubbish/disc/hash"
+	"github.com/zoroqi/hamster/disc/hash"
 	"io/fs"
 	"path/filepath"
 )

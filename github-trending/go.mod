@@ -1,4 +1,4 @@
-module github.com/zoroqi/rubbish/github-trending
+module github.com/zoroqi/hamster/github-trending
 
 go 1.15
 

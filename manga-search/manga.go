@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/zoroqi/rubbish/manga"
+	"github.com/zoroqi/hamster/manga"
 	"io"
 	"os"
 	"strings"

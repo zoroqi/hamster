@@ -3,7 +3,7 @@ package website
 import (
 	"fmt"
 	"github.com/anaskhan96/soup"
-	"github.com/zoroqi/rubbish/mangas/data"
+	"github.com/zoroqi/hamster/mangas/data"
 	"io"
 	"net/http"
 	"net/url"

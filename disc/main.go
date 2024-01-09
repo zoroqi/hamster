@@ -3,7 +3,7 @@
 package main
 
 import "fmt"
-import "github.com/zoroqi/rubbish/disc"
+import "github.com/zoroqi/hamster/disc"
 
 func main() {
 	meta := disc.FastScan(".")
