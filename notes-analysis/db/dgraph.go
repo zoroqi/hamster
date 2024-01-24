@@ -139,7 +139,6 @@ func PrintDoc(ctx neo4j.DriverWithContext, doc *store.Document, note2tag map[str
 		}, neo4j.EagerResultTransformer,
 		neo4j.ExecuteQueryWithDatabase("neo4j"))
 	fmt.Println(result, err, cql, doc.Id, doc.Name)
-
 	dup := map[string]bool{}
 	for _, tag := range note2tag[doc.Id] {
 		if !dup[tag.Id] {
