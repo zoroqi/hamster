@@ -147,7 +147,7 @@ Outer:
 }
 
 func size(l int64) []byte {
-	bs := make([]byte, 8)
+	bs := make([]byte, file_size_byte_len)
 	bs[0] = byte(l >> 56)
 	bs[1] = byte(l >> 48)
 	bs[2] = byte(l >> 40)
