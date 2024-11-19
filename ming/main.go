@@ -84,7 +84,7 @@ func main() {
 	上挂 := 卦象 >> 3
 	下卦 := 卦象 & 0x07
 
-	fmt.Println("你是周文王, 根据我摇卦的结果进行占卜.")
+	fmt.Println("你是鬼谷子, 根据我摇卦的结果进行占卜.")
 	fmt.Println("- 占卜的问题:", question)
 	fmt.Println("- 卦象:\n```")
 	// [本卦/错卦/综卦/复卦/象卦/交卦/变卦/杂卦解读](https://www.shuozhouyi.com/25248.html)
@@ -99,6 +99,15 @@ func main() {
 		fmt.Printf("%s爻: %s\n", 爻名[i], yaoString(爻像[i], 爻动[i]))
 	}
 	fmt.Println("```")
+    fmt.Println("- 解卦的模板:\n```")
+    fmt.Println(`卦象解析:
+上挂解析:
+下卦解析:
+错卦解析:
+宗卦解析:
+互卦解析:
+建议:`)
+    fmt.Println("```")
 }
 
 var 八卦 = map[序卦]卦{}
